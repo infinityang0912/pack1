@@ -83,30 +83,43 @@ li{
   display:flex;align-items:flex-start;gap:12px;
   padding:13px 2px; border-bottom:1px dashed var(--line);
   cursor:pointer; user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .18s ease;
 }
 li:last-child{border-bottom:none}
+li:active{opacity:.62}
 .bx{
   flex:0 0 auto;width:19px;height:19px;margin-top:1px;
   border:1.5px solid var(--ink2);position:relative;background:transparent;
+  transition:transform .14s ease,border-color .22s ease;
 }
+li:active .bx{transform:scale(.86)}
 li.star .bx{border-color:var(--red);border-width:2px}
 .bx::after{
   content:"";position:absolute;inset:2px;background:var(--ink);
-  transform:scale(0);transition:transform .12s ease;
+  transform:scale(0);
+  transition:transform .26s cubic-bezier(.34,1.56,.64,1);
 }
 .bx::before{
   content:"";position:absolute;left:6px;top:2.5px;width:4px;height:8px;z-index:1;
   border:solid var(--paper);border-width:0 2px 2px 0;
-  transform:rotate(45deg) scale(0);transition:transform .12s ease .04s;
+  transform:rotate(45deg) scale(0);transform-origin:center;
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1) .07s;
 }
 li.done .bx::after{transform:scale(1)}
 li.done .bx::before{transform:rotate(45deg) scale(1)}
 li.done .bx{border-color:var(--ink)}
-li.done .tx{color:var(--ink2);text-decoration:line-through;text-decoration-thickness:1px}
 li.done .dot{background:var(--ink2);opacity:.45}
 
-.tx{flex:1;min-width:0;line-height:1.45}
-.tx .nm{font-size:15.5px}
+.tx{flex:1;min-width:0;line-height:1.45;transition:color .25s ease}
+.tx .nm{font-size:15.5px;position:relative;transition:color .25s ease}
+.tx .nm::after{
+  content:"";position:absolute;left:-1px;right:0;top:53%;height:1px;
+  background:currentColor;transform:scaleX(0);transform-origin:left center;
+  transition:transform .34s cubic-bezier(.4,0,.2,1);
+}
+li.done .tx{color:var(--ink2)}
+li.done .tx .nm::after{transform:scaleX(1)}
 li.star .tx .nm{font-weight:700}
 .tx .q{font-size:12px;color:var(--ink2);margin-left:5px;font-variant-numeric:tabular-nums}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-left:6px;vertical-align:middle}
@@ -119,6 +132,32 @@ li:hover .del{opacity:.5}
 li:hover .del:hover{opacity:1}
 
 .empty{color:var(--ink2);font-size:14px;text-align:center;padding:56px 0;letter-spacing:.05em}
+
+/* ---------- 动效 ---------- */
+@keyframes numPop{
+  0%{transform:scale(1)}
+  38%{transform:scale(1.16)}
+  100%{transform:scale(1)}
+}
+@keyframes chipIn{
+  from{transform:scale(.86);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+@keyframes rowIn{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:none}
+}
+#nLeft{display:inline-block;transform-origin:left center}
+#nLeft.pop{animation:numPop .34s cubic-bezier(.34,1.56,.64,1)}
+.chip{animation:chipIn .3s cubic-bezier(.34,1.56,.64,1) both}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+}
 
 /* ---------- 底部 ---------- */
 .foot{
@@ -423,8 +462,8 @@ function applyScene(id, silent) {
   });
   state.scenes.push(id);
   save(); render();
-  if (!silent) toast(added ? `已加 ${t.name}：${added} 项`
-    : (t.items.length ? `「${t.name}」的东西清单里都有` : `「${t.name}」还是空的`));
+  if (!silent) { haptic('tap'); toast(added ? `已加 ${t.name}：${added} 项`
+    : (t.items.length ? `「${t.name}」的东西清单里都有` : `「${t.name}」还是空的`)); }
   return { added, skipped };
 }
 
@@ -453,6 +492,42 @@ function refreshScene(id) {
     names.add(name);
   });
   save(); render();
+}
+
+/* ---------- 震动 ---------- */
+/* Android Chrome 支持 navigator.vibrate；iOS Safari 无此 API，调用会自动跳过 */
+function haptic(kind) {
+  const nav = navigator;
+  if (typeof nav.vibrate !== 'function') return;
+  try {
+    if (kind === 'on') nav.vibrate(9);
+    else if (kind === 'off') nav.vibrate(5);
+    else if (kind === 'tap') nav.vibrate(6);
+    else if (kind === 'done') nav.vibrate([12, 40, 24]);
+    else nav.vibrate(8);
+  } catch (_) { /* 用户未授权或浏览器拒绝，静默 */ }
+}
+
+function popNumber() {
+  const el = $('#nLeft');
+  if (!el) return;
+  el.classList.remove('pop');
+  void el.offsetWidth;          // 强制重排，让动画可以重播
+  el.classList.add('pop');
+}
+
+/* 只更新计数，不重建列表——勾选时用它，才能保住动画 */
+function updateCounts() {
+  const all = state.items;
+  const left = all.filter((i) => !i.done).length;
+  $('#nLeft').textContent = String(left).padStart(2, '0');
+  $('#nDone').textContent = all.length - left;
+  $('#nAll').textContent = all.length;
+  document.querySelectorAll('.sec[data-cat]').forEach((sec) => {
+    const arr = all.filter((i) => i.cat === sec.dataset.cat);
+    const em = sec.querySelector('h2 em');
+    if (em) em.textContent = `${arr.filter((i) => i.done).length}/${arr.length}`;
+  });
 }
 
 /* ---------- 渲染 ---------- */
@@ -490,7 +565,7 @@ function render() {
     const arr = vis.filter((i) => i.cat === cat);
     if (!arr.length) return '';
     arr.sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
-    return `<section class="sec">
+    return `<section class="sec" data-cat="${cat}">
       <h2>${cat} <em>${arr.filter((i) => i.done).length}/${arr.length}</em></h2>
       <ul>${arr.map((i) => `
         <li data-id="${i.id}" class="${i.done ? 'done' : ''} ${i.star ? 'star' : ''}">
@@ -522,8 +597,21 @@ $('#list').addEventListener('click', (e) => {
   if (!li) return;
   const it = state.items.find((i) => i.id === li.dataset.id);
   if (!it) return;
+
   it.done = !it.done;
-  save(); render();
+  haptic(it.done ? 'on' : 'off');
+  save();
+
+  if (state.onlyTodo && it.done) {
+    // 「只看未拿」模式下勾上的项要消失，只能重建
+    render();
+    return;
+  }
+
+  // 其余情况只改这一行，保留过渡动画
+  li.classList.toggle('done', it.done);
+  updateCounts();
+  popNumber();
 });
 
 $('#bTodo').onclick = () => { state.onlyTodo = !state.onlyTodo; save(); render(); };
@@ -549,7 +637,7 @@ $('#bAdd').onclick = () => {
           owner: root.querySelector('#ao').value, cat: root.querySelector('#ac').value,
           star: root.querySelector('#as').checked, done: false, tag: null,
         });
-        save(); render(); close(); toast('加好了');
+        save(); render(); close(); haptic('tap'); toast('加好了');
       };
       root.querySelector('[data-x="ok"]').onclick = go;
       root.querySelector('[data-x="c"]').onclick = close;
@@ -572,14 +660,14 @@ $('#bCheck').onclick = () => {
         const row = e.target.closest('[data-id]');
         if (!b || !row) return;
         const it = state.items.find((i) => i.id === row.dataset.id);
-        if (it) { it.done = true; save(); }
+        if (it) { it.done = true; save(); haptic('on'); }
         row.remove(); render();
         if (!root.querySelector('.chk [data-id]')) close();
       };
       root.querySelector('[data-x="c"]').onclick = close;
       root.querySelector('[data-x="all"]').onclick = () => {
         state.items.forEach((i) => { i.done = true; });
-        save(); render(); close(); toast('全勾上了');
+        save(); render(); close(); haptic('done'); toast('全勾上了');
       };
     });
 };
@@ -606,8 +694,8 @@ function openScenes() {
         const main = e.target.closest('[data-t]');
         if (main) {
           const id = main.dataset.t;
-          if (state.scenes.includes(id)) dropScene(id, true);
-          else applyScene(id, true);
+          if (state.scenes.includes(id)) { dropScene(id, true); haptic('off'); }
+          else { applyScene(id, true); haptic('on'); }
           box.innerHTML = rows();
           return;
         }
