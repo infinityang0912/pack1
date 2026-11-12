@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f1e9">
+<meta name="robots" content="noindex,nofollow">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="出行清单">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>出行清单</title>
+<style>
+:root{
+  --paper:#f4f1e9; --ink:#1c1b18; --ink2:#6f6a5e; --line:#d5cfc0;
+  --red:#ad362b; --card:#fbf9f3;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --paper:#15140f; --ink:#eae6d9; --ink2:#918c7d; --line:#322f28;
+         --red:#e2685a; --card:#1b1a14; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  padding:0 20px calc(84px + env(safe-area-inset-bottom));
+  max-width:560px; margin:0 auto;
+}
+
+/* ---------- 头部 ---------- */
+header{padding:26px 0 0}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+h1{
+  margin:0; font-size:27px; font-weight:800; letter-spacing:.1em;
+  line-height:1.2;
+}
+.ic{
+  border:none;background:transparent;color:var(--ink);font-size:20px;
+  cursor:pointer;padding:4px 0 0;font-family:inherit;line-height:1;letter-spacing:0;
+}
+.meta{
+  display:flex;align-items:baseline;gap:8px;margin-top:14px;
+  padding-bottom:12px;border-bottom:2px solid var(--ink);
+  flex-wrap:wrap;
+}
+.meta .n{font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.meta .u{font-size:13px;color:var(--ink2);letter-spacing:.04em}
+.meta .of{margin-left:auto;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.meta .tg{
+  border:1px solid var(--line);background:transparent;color:var(--ink2);
+  font-size:11px;padding:4px 8px;cursor:pointer;font-family:inherit;letter-spacing:.06em;
+}
+.meta .tg.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ---------- 场景 ---------- */
+.scenes{display:flex;gap:6px;flex-wrap:wrap;padding:14px 0 4px}
+.chip{
+  border:1px solid var(--ink2);background:transparent;color:var(--ink);
+  font-size:12.5px;padding:5px 9px;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;gap:5px;line-height:1.3;
+}
+.chip .x{opacity:.45;font-size:13px;margin-left:2px}
+.chip:hover .x{opacity:1}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.on .x{opacity:.6}
+.chip.add{border-style:dashed;color:var(--ink2)}
+
+/* ---------- 列表 ---------- */
+main{padding-top:6px}
+.sec{margin-top:26px}
+.sec h2{
+  margin:0 0 2px; font-size:11px; font-weight:700; letter-spacing:.22em;
+  color:var(--ink2); text-transform:uppercase;
+  display:flex;align-items:baseline;gap:8px;
+}
+.sec h2 em{font-style:normal;letter-spacing:0;font-weight:500;opacity:.7}
+ul{list-style:none;margin:0;padding:0}
+li{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:13px 2px; border-bottom:1px dashed var(--line);
+  cursor:pointer; user-select:none;
+}
+li:last-child{border-bottom:none}
+.bx{
+  flex:0 0 auto;width:19px;height:19px;margin-top:1px;
+  border:1.5px solid var(--ink2);position:relative;background:transparent;
+}
+li.star .bx{border-color:var(--red);border-width:2px}
+.bx::after{
+  content:"";position:absolute;inset:2px;background:var(--ink);
+  transform:scale(0);transition:transform .12s ease;
+}
+.bx::before{
+  content:"";position:absolute;left:6px;top:2.5px;width:4px;height:8px;z-index:1;
+  border:solid var(--paper);border-width:0 2px 2px 0;
+  transform:rotate(45deg) scale(0);transition:transform .12s ease .04s;
+}
+li.done .bx::after{transform:scale(1)}
+li.done .bx::before{transform:rotate(45deg) scale(1)}
+li.done .bx{border-color:var(--ink)}
+li.done .tx{color:var(--ink2);text-decoration:line-through;text-decoration-thickness:1px}
+li.done .dot{background:var(--ink2);opacity:.45}
+
+.tx{flex:1;min-width:0;line-height:1.45}
+.tx .nm{font-size:15.5px}
+li.star .tx .nm{font-weight:700}
+.tx .q{font-size:12px;color:var(--ink2);margin-left:5px;font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-left:6px;vertical-align:middle}
+.who{font-size:11px;color:var(--ink2);margin-left:6px;letter-spacing:.04em}
+.del{
+  flex:0 0 auto;color:var(--ink2);opacity:0;font-size:16px;line-height:1;
+  padding:2px 0 0 6px;cursor:pointer;
+}
+li:hover .del{opacity:.5}
+li:hover .del:hover{opacity:1}
+
+.empty{color:var(--ink2);font-size:14px;text-align:center;padding:56px 0;letter-spacing:.05em}
+
+/* ---------- 底部 ---------- */
+.foot{
+  position:fixed;left:0;right:0;bottom:0;
+  display:flex;gap:10px;padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+  background:var(--paper);border-top:1px solid var(--line);
+  max-width:560px;margin:0 auto;
+}
+.foot button{
+  flex:1;border:1px solid var(--ink);background:transparent;color:var(--ink);
+  font-size:14px;font-weight:600;padding:13px 8px;cursor:pointer;
+  font-family:inherit;letter-spacing:.04em;
+}
+.foot button.solid{background:var(--ink);color:var(--paper)}
+
+/* ---------- 弹窗 ---------- */
+dialog{
+  border:none;padding:0;background:var(--card);color:var(--ink);
+  width:min(92vw,460px);max-height:86vh;
+  box-shadow:0 24px 70px rgba(0,0,0,.28);
+}
+dialog::backdrop{background:rgba(20,18,12,.5)}
+.dlg{padding:22px 20px}
+.dlg h3{margin:0 0 6px;font-size:18px;font-weight:750;letter-spacing:.04em}
+.dlg p{margin:0 0 16px;font-size:13px;color:var(--ink2);line-height:1.6}
+.dlg .row{display:flex;gap:8px}
+.acts{display:flex;gap:8px;margin-top:16px}
+.acts button{
+  flex:1;border:1px solid var(--ink);background:transparent;color:var(--ink);
+  padding:12px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;
+}
+.acts button.solid{background:var(--ink);color:var(--paper)}
+.acts button.danger{border-color:var(--red);color:var(--red)}
+
+.inp{
+  width:100%;padding:10px 11px;border:1px solid var(--line);background:var(--paper);
+  color:var(--ink);font:15px inherit;font-family:inherit;
+}
+.inp:focus{outline:1px solid var(--ink2)}
+
+/* 模板选择 */
+.tpl-list{max-height:52vh;overflow:auto;margin:0 -4px;padding:0 4px}
+.tpl{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:12px 2px;border:none;border-bottom:1px dashed var(--line);
+  background:transparent;color:var(--ink);cursor:pointer;
+  font-family:inherit;text-align:left;
+}
+.tpl:last-child{border-bottom:none}
+.tpl .ti{font-size:19px;width:24px;text-align:center;flex:0 0 auto}
+.tpl .tn{flex:1;font-size:15px;font-weight:600}
+.tpl .tc{font-size:11.5px;color:var(--ink2)}
+.tpl .tick{font-size:14px;color:var(--ink);width:16px;text-align:center;flex:0 0 auto}
+.tpl .pen{
+  border:none;background:transparent;color:var(--ink2);font-size:14px;
+  padding:4px 6px;cursor:pointer;flex:0 0 auto;
+}
+.tpl.on{background:var(--paper)}
+.tpl.on .tn{font-weight:750}
+
+/* 模板编辑器 */
+.ted{max-height:44vh;overflow:auto;margin:0 -2px;padding:0 2px}
+.terow{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.terow .inp{flex:1;padding:8px 9px;font-size:14px}
+.terow .inp.q{flex:0 0 74px;text-align:center}
+.terow .rm{
+  flex:0 0 auto;border:none;background:transparent;color:var(--ink2);
+  font-size:16px;padding:4px 6px;cursor:pointer;
+}
+.addrow{
+  width:100%;border:1px dashed var(--line);background:transparent;color:var(--ink2);
+  padding:9px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px;
+}
+.icon-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.icon-row button{
+  width:38px;height:38px;font-size:18px;border:1px solid var(--line);
+  background:var(--paper);cursor:pointer;line-height:1;font-family:inherit;
+}
+.icon-row button.on{border:2px solid var(--ink)}
+
+/* 出门检查 */
+.chk{max-height:48vh;overflow:auto}
+.chk div{
+  display:flex;align-items:center;gap:10px;padding:11px 2px;
+  border-bottom:1px dashed var(--line);font-size:15px;
+}
+.chk div:last-child{border-bottom:none}
+.chk .nm{flex:1}
+.chk .nm.star{font-weight:700}
+.chk button{
+  border:1px solid var(--line);background:transparent;color:var(--ink);
+  padding:5px 11px;font-size:12px;cursor:pointer;font-family:inherit;
+}
+
+/* 同步 */
+.seg{display:flex;gap:0;border:1px solid var(--ink);margin-bottom:16px}
+.seg button{
+  flex:1;border:none;background:transparent;color:var(--ink);
+  padding:9px;font-size:13px;cursor:pointer;font-family:inherit;
+}
+.seg button.on{background:var(--ink);color:var(--paper)}
+textarea.inp{height:110px;resize:none;font-family:ui-monospace,Consolas,monospace;font-size:11px;line-height:1.5}
+
+.toast{
+  position:fixed;left:50%;bottom:96px;transform:translate(-50%,14px);
+  background:var(--ink);color:var(--paper);font-size:13px;
+  padding:10px 16px;opacity:0;pointer-events:none;
+  transition:all .18s ease;max-width:80vw;text-align:center;z-index:99;
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <h1 id="ttl">出行清单</h1>
+    <button class="ic" id="bSet" title="设置">☰</button>
+  </div>
+  <div class="meta">
+    <span class="n" id="nLeft">0</span>
+    <span class="u">项未拿</span>
+    <button class="tg" id="bTodo">只看未拿</button>
+    <span class="of">已拿 <span id="nDone">0</span> / <span id="nAll">0</span></span>
+  </div>
+</header>
+
+<div class="scenes" id="scenes"></div>
+
+<main id="list"></main>
+
+<div class="foot">
+  <button id="bAdd">＋ 加一项</button>
+  <button class="solid" id="bCheck">出门检查</button>
+</div>
+
+<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+const KEY = 'packlist.v4';
+const TPL_KEY = 'packlist.v4.tpl';
+const CATS = ['证件', '头发', '清洁护理', '化妆', '配饰', '电子', '衣物', '装备', '其它'];
+const ICONS = ['🧳','🌊','❄️','🏔','⛺','💼','🚗','🏠','🏙','🎤','🏥','🎓','🍜','🎿','🏕','⛱'];
+
+/* [名称, 数量, 归属, 重要] —— 基础清单，所有人都有 */
+const BASE = [
+  ['证件', [
+    ['身份证','1','both',1], ['学生证','1','both',0],
+    ['银行卡','1','both',1], ['现金','若干','both',0], ['钥匙','1','both',1],
+  ]],
+  ['头发', [
+    ['洗发水','1','you',0], ['护发素','1','you',0], ['护发精油','1','you',0],
+    ['梳子','1','you',0], ['发圈','若干','you',0], ['发夹','若干','you',0],
+    ['发箍','1','you',0], ['抓夹','1','you',0],
+  ]],
+  ['清洁护理', [
+    ['洗脸巾','足量','you',0], ['护手霜','1','you',0], ['小镜子','1','you',0],
+    ['卸妆油','1','you',0], ['卸妆湿巾','1 包','you',0], ['棉签','1 盒','both',0],
+    ['纸巾','2 包','both',0], ['湿巾','1 包','both',0],
+    ['一次性马桶垫','5','both',0],
+  ]],
+  ['化妆', [
+    ['水乳','1','you',0], ['遮瑕','1','you',0], ['粉底液','1','you',0],
+    ['散粉','1','you',0], ['眉粉 / 眉笔','1','you',0], ['腮红','1','you',0],
+    ['修容','1','you',0], ['提亮','1','you',0], ['眼影','1','you',0],
+    ['眼线','1','you',0], ['眼线胶笔','1','you',0], ['睫毛膏','1','you',0],
+    ['假睫毛 + 睫毛夹','1 套','you',0], ['化妆刷','1 套','you',0],
+    ['腮红刷','1','you',0], ['唇线笔','1','you',0], ['口红','2','you',0],
+    ['定妆喷雾','1','you',0],
+  ]],
+  ['配饰', [
+    ['耳钉','1 对','you',0], ['耳环','1 对','you',0], ['项链','1','you',0],
+    ['戒指','1','you',0], ['墨镜','1','you',0],
+    ['隐形眼镜','1 副','you',1], ['隐形眼镜护理液','1','you',1],
+    ['框架眼镜','1','you',1],
+  ]],
+  ['电子', [
+    ['手机','1','both',1], ['充电宝','1','both',1],
+    ['数据线','1','both',0], ['充电器','1','both',1], ['耳机','1','both',0],
+  ]],
+  ['衣物', [
+    ['内衣','2','you',0], ['内裤','3','you',0], ['袜子','3 双','both',0],
+    ['换洗衣物','2 套','both',0], ['鞋子','1 双','both',0],
+    ['睡衣','1','both',0], ['拖鞋','1 双','both',0],
+  ]],
+  ['其它', [
+    ['伞','1','both',0], ['小零食','若干','both',0], ['常备药','1 盒','both',0],
+  ]],
+];
+
+/* 预设模板：[名称, 数量, 归属, 分类, 重要] */
+const PRESET = [
+  { id:'beach', name:'海边 / 海岛', icon:'🌊', items:[
+    ['泳衣','2','you','衣物',0], ['泳镜','1','you','衣物',0],
+    ['沙滩拖鞋','1 双','both','衣物',0], ['防晒霜 SPF50','1','both','化妆',1],
+    ['晒后修复','1','you','化妆',0], ['遮阳帽','1','you','配饰',0],
+    ['沙滩巾','1','both','衣物',0], ['防水手机袋','1','both','电子',0],
+    ['驱蚊液','1','both','其它',0],
+  ]},
+  { id:'winter', name:'雪山 / 北方', icon:'❄️', items:[
+    ['羽绒服','1','both','衣物',1], ['保暖内衣','2 套','both','衣物',0],
+    ['羊毛袜','3 双','both','衣物',0], ['雪地靴','1 双','both','衣物',0],
+    ['手套','1 双','both','衣物',0], ['围巾','1','both','衣物',0],
+    ['毛线帽','1','both','衣物',0], ['润唇膏','1','both','化妆',0],
+    ['暖宝宝','10 片','both','其它',0], ['保温杯','1','both','装备',0],
+  ]},
+  { id:'plateau', name:'高原 / 进藏', icon:'🏔', items:[
+    ['便携氧气瓶','2','both','装备',1], ['红景天','1 盒','both','其它',1],
+    ['葡萄糖','1 盒','both','其它',0], ['防晒霜 SPF50','1','both','化妆',1],
+    ['润唇膏','1','both','化妆',0], ['保温杯','1','both','装备',0],
+  ]},
+  { id:'camp', name:'露营 / 野营', icon:'⛺', items:[
+    ['帐篷','1','both','装备',1], ['睡袋','2','both','装备',0],
+    ['防潮垫','2','both','装备',0], ['头灯','1','both','装备',0],
+    ['折叠椅','1','both','装备',0], ['户外水壶','1','both','装备',0],
+    ['驱蚊液','1','both','其它',0], ['垃圾袋','1 卷','both','其它',0],
+    ['打火机','1','both','其它',0],
+  ]},
+  { id:'biz', name:'出差 / 开会', icon:'💼', items:[
+    ['笔记本电脑','1','both','电子',1], ['电脑充电器','1','both','电子',1],
+    ['正装','1 套','both','衣物',0], ['皮鞋','1 双','both','衣物',0],
+    ['U 盘','1','both','电子',0], ['名片','1 盒','both','其它',0],
+    ['会议材料','1 份','both','其它',0],
+  ]},
+  { id:'drive', name:'自驾 / 长途', icon:'🚗', items:[
+    ['驾驶证','1','me','证件',1], ['行驶证','1','me','证件',1],
+    ['车载充电器','1','both','电子',0], ['手机支架','1','both','电子',0],
+    ['晕车药','1 盒','both','其它',0], ['保温杯','1','both','装备',0],
+  ]},
+  { id:'home', name:'回老家', icon:'🏠', items:[
+    ['给家人的礼物','若干','both','其它',0], ['特产','若干','both','其它',0],
+    ['备用充电线','1','both','电子',0], ['常备药','1 盒','both','其它',0],
+  ]},
+  { id:'city', name:'城市观光', icon:'🏙', items:[
+    ['舒适运动鞋','1 双','both','衣物',0], ['小背包','1','both','装备',0],
+    ['薄外套','1','both','衣物',0], ['水杯','1','both','装备',0],
+    ['攻略 / 地图','1 份','both','其它',0],
+  ]},
+];
+
+/* ---------- 状态 ---------- */
+let state = { title:'出行清单', items:[], scenes:[], onlyTodo:false };
+let templates = [];
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = (s) => document.querySelector(s);
+
+function buildBase() {
+  const out = [];
+  BASE.forEach(([cat, arr]) => arr.forEach(([name, qty, owner, star]) => out.push({
+    id: uid(), name, qty, owner, cat, star: !!star, done: false, tag: null,
+  })));
+  return out;
+}
+
+function loadTpl() {
+  try {
+    const raw = localStorage.getItem(TPL_KEY);
+    if (raw) {
+      const t = JSON.parse(raw);
+      if (Array.isArray(t) && t.length) return t;
+    }
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(PRESET));
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+}
+function saveTpl() {
+  try { localStorage.setItem(TPL_KEY, JSON.stringify(templates)); } catch (e) {}
+}
+function load() {
+  templates = loadTpl();
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const st = JSON.parse(raw);
+      if (st && Array.isArray(st.items) && st.items.length) { state = Object.assign(state, st); return true; }
+    }
+  } catch (e) {}
+  state.items = buildBase();
+  return false;
+}
+
+/* ---------- 场景 ---------- */
+function tplById(id) { return templates.find((t) => t.id === id); }
+
+function applyScene(id, silent) {
+  const t = tplById(id);
+  if (!t || state.scenes.includes(id)) return { added: 0, skipped: 0 };
+  const names = new Set(state.items.map((i) => i.name));
+  let added = 0, skipped = 0;
+  t.items.forEach(([name, qty, owner, cat, star]) => {
+    if (names.has(name)) { skipped++; return; }
+    state.items.push({ id: uid(), name, qty, owner, cat, star: !!star, done: false, tag: id });
+    names.add(name); added++;
+  });
+  state.scenes.push(id);
+  save(); render();
+  if (!silent) toast(added ? `已加 ${t.name}：${added} 项`
+    : (t.items.length ? `「${t.name}」的东西清单里都有` : `「${t.name}」还是空的`));
+  return { added, skipped };
+}
+
+function dropScene(id, silent) {
+  const t = tplById(id);
+  const before = state.items.length;
+  state.items = state.items.filter((i) => i.tag !== id);
+  state.scenes = state.scenes.filter((s) => s !== id);
+  const n = before - state.items.length;
+  save(); render();
+  if (!silent) toast(`已撤掉「${t ? t.name : ''}」的 ${n} 项`);
+  return n;
+}
+
+// 模板被编辑后，替换清单里属于它的项，保留同名项的勾选状态
+function refreshScene(id) {
+  const t = tplById(id);
+  if (!t || !state.scenes.includes(id)) return;
+  const doneMap = {};
+  state.items.forEach((i) => { if (i.done) doneMap[i.name] = 1; });
+  state.items = state.items.filter((i) => i.tag !== id);
+  const names = new Set(state.items.map((i) => i.name));
+  t.items.forEach(([name, qty, owner, cat, star]) => {
+    if (names.has(name)) return;
+    state.items.push({ id: uid(), name, qty, owner, cat, star: !!star, done: !!doneMap[name], tag: id });
+    names.add(name);
+  });
+  save(); render();
+}
+
+/* ---------- 渲染 ---------- */
+function render() {
+  $('#ttl').textContent = state.title || '出行清单';
+
+  const all = state.items;
+  const left = all.filter((i) => !i.done).length;
+  $('#nLeft').textContent = String(left).padStart(2, '0');
+  $('#nDone').textContent = all.length - left;
+  $('#nAll').textContent = all.length;
+  $('#bTodo').classList.toggle('on', state.onlyTodo);
+
+  // 场景
+  const box = $('#scenes');
+  box.innerHTML =
+    state.scenes.map((id) => {
+      const t = tplById(id);
+      return t ? `<button class="chip on" data-drop="${id}">${t.icon} ${esc(t.name)}<span class="x">✕</span></button>` : '';
+    }).join('') +
+    `<button class="chip add" id="bScene">＋ 场景</button>`;
+  $('#bScene').onclick = openScenes;
+  box.querySelectorAll('[data-drop]').forEach((b) => {
+    b.onclick = () => dropScene(b.dataset.drop);
+  });
+
+  // 列表
+  const vis = state.onlyTodo ? all.filter((i) => !i.done) : all;
+  const list = $('#list');
+  if (!vis.length) {
+    list.innerHTML = `<div class="empty">${state.onlyTodo ? '全部拿齐了' : '还没有东西'}</div>`;
+    return;
+  }
+  list.innerHTML = CATS.map((cat) => {
+    const arr = vis.filter((i) => i.cat === cat);
+    if (!arr.length) return '';
+    arr.sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
+    return `<section class="sec">
+      <h2>${cat} <em>${arr.filter((i) => i.done).length}/${arr.length}</em></h2>
+      <ul>${arr.map((i) => `
+        <li data-id="${i.id}" class="${i.done ? 'done' : ''} ${i.star ? 'star' : ''}">
+          <span class="bx"></span>
+          <span class="tx">
+            <span class="nm">${esc(i.name)}</span>${i.star ? '<span class="dot"></span>' : ''}
+            ${i.qty && i.qty !== '1' ? `<span class="q">× ${esc(i.qty)}</span>` : ''}
+            ${i.owner === 'you' ? '<span class="who">TA</span>' : i.owner === 'me' ? '<span class="who">我</span>' : ''}
+          </span>
+          <span class="del" data-del="${i.id}">✕</span>
+        </li>`).join('')}</ul>
+    </section>`;
+  }).join('');
+}
+
+/* ---------- 交互 ---------- */
+$('#list').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    e.stopPropagation();
+    const it = state.items.find((i) => i.id === del.dataset.del);
+    if (it && confirm(`删掉「${it.name}」？`)) {
+      state.items = state.items.filter((i) => i.id !== del.dataset.del);
+      save(); render();
+    }
+    return;
+  }
+  const li = e.target.closest('li');
+  if (!li) return;
+  const it = state.items.find((i) => i.id === li.dataset.id);
+  if (!it) return;
+  it.done = !it.done;
+  save(); render();
+});
+
+$('#bTodo').onclick = () => { state.onlyTodo = !state.onlyTodo; save(); render(); };
+
+$('#bAdd').onclick = () => {
+  openDialog(`<h3>加一项</h3>
+    <input class="inp" id="an" placeholder="名称，比如 充电线">
+    <div class="row" style="margin-top:8px">
+      <input class="inp" id="aq" placeholder="数量（可空）" style="flex:0 0 120px">
+      <select class="inp" id="ac" style="flex:1">${CATS.map((c) => `<option>${c}</option>`).join('')}</select>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <select class="inp" id="ao"><option value="both">共用</option><option value="me">我的</option><option value="you">TA 的</option></select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2)"><input type="checkbox" id="as"> 重要</label>
+    </div>
+    <div class="acts"><button data-x="c">取消</button><button class="solid" data-x="ok">加上</button></div>`,
+    (root, close) => {
+      const go = () => {
+        const name = root.querySelector('#an').value.trim();
+        if (!name) return toast('先写个名字');
+        state.items.push({
+          id: uid(), name, qty: root.querySelector('#aq').value.trim() || '1',
+          owner: root.querySelector('#ao').value, cat: root.querySelector('#ac').value,
+          star: root.querySelector('#as').checked, done: false, tag: null,
+        });
+        save(); render(); close(); toast('加好了');
+      };
+      root.querySelector('[data-x="ok"]').onclick = go;
+      root.querySelector('[data-x="c"]').onclick = close;
+      root.querySelector('#an').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+      setTimeout(() => root.querySelector('#an').focus(), 60);
+    });
+};
+
+$('#bCheck').onclick = () => {
+  const todo = state.items.filter((i) => !i.done).sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
+  if (!todo.length) return toast('都拿齐了');
+  openDialog(`<h3>还差 ${todo.length} 项</h3><p>红色的先拿</p>
+    <div class="chk">${todo.map((i) => `
+      <div data-id="${i.id}"><span class="nm ${i.star ? 'star' : ''}" style="flex:1">${esc(i.name)}${i.qty && i.qty !== '1' ? ` × ${esc(i.qty)}` : ''}</span>
+      <button>拿了</button></div>`).join('')}</div>
+    <div class="acts"><button data-x="c">先去拿</button><button class="solid" data-x="all">全勾上</button></div>`,
+    (root, close) => {
+      root.querySelector('.chk').onclick = (e) => {
+        const b = e.target.closest('button');
+        const row = e.target.closest('[data-id]');
+        if (!b || !row) return;
+        const it = state.items.find((i) => i.id === row.dataset.id);
+        if (it) { it.done = true; save(); }
+        row.remove(); render();
+        if (!root.querySelector('.chk [data-id]')) close();
+      };
+      root.querySelector('[data-x="c"]').onclick = close;
+      root.querySelector('[data-x="all"]').onclick = () => {
+        state.items.forEach((i) => { i.done = true; });
+        save(); render(); close(); toast('全勾上了');
+      };
+    });
+};
+
+/* ---------- 场景选择 ---------- */
+function openScenes() {
+  const rows = () => templates.map((t) => `
+    <div class="tpl ${state.scenes.includes(t.id) ? 'on' : ''}">
+      <button class="tpl-main" data-t="${t.id}" style="display:flex;align-items:center;gap:10px;flex:1;border:none;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;padding:0">
+        <span class="ti">${t.icon}</span>
+        <span class="tn">${esc(t.name)}</span>
+        <span class="tc">${t.items.length} 项</span>
+        <span class="tick">${state.scenes.includes(t.id) ? '✓' : ''}</span>
+      </button>
+      <button class="pen" data-edit="${t.id}">✎</button>
+    </div>`).join('');
+
+  openDialog(`<h3>去哪</h3><p>勾上的会补进清单，可以多选；点 ✎ 能改里面的东西</p>
+    <div class="tpl-list" id="tplList">${rows()}</div>
+    <div class="acts"><button data-x="new">＋ 新建模板</button><button class="solid" data-x="ok">好了</button></div>`,
+    (root, close) => {
+      const box = root.querySelector('#tplList');
+      box.onclick = (e) => {
+        const main = e.target.closest('[data-t]');
+        if (main) {
+          const id = main.dataset.t;
+          if (state.scenes.includes(id)) dropScene(id, true);
+          else applyScene(id, true);
+          box.innerHTML = rows();
+          return;
+        }
+        const pen = e.target.closest('[data-edit]');
+        if (pen) { close(); openEditor(pen.dataset.edit, openScenes); }
+      };
+      root.querySelector('[data-x="new"]').onclick = () => { close(); openEditor(null, openScenes); };
+      root.querySelector('[data-x="ok"]').onclick = close;
+    });
+}
+
+/* ---------- 模板编辑器 ---------- */
+function openEditor(id, back) {
+  const t = id ? tplById(id) : { id: uid(), name: '', icon: '🧳', items: [] };
+  const clone = JSON.parse(JSON.stringify(t));
+
+  const rows = () => clone.items.map((it, k) => `
+    <div class="terow" data-k="${k}">
+      <input class="inp" data-f="n" value="${esc(it[0])}" placeholder="名称">
+      <input class="inp q" data-f="q" value="${esc(it[1])}" placeholder="数量">
+      <button class="rm" data-rm="${k}">✕</button>
+    </div>`).join('');
+
+  openDialog(`<h3>${id ? '编辑模板' : '新建模板'}</h3>
+    <input class="inp" id="en" value="${esc(clone.name)}" placeholder="模板名，比如 演唱会">
+    <div class="icon-row" id="ico" style="margin-top:10px">${ICONS.map((ic) =>
+      `<button data-ico="${ic}" class="${ic === clone.icon ? 'on' : ''}">${ic}</button>`).join('')}</div>
+    <p style="margin:0 0 8px">清单内容</p>
+    <div class="ted" id="ted">${rows()}</div>
+    <button class="addrow" id="addRow">＋ 加一项</button>
+    <div class="acts"><button data-x="c">取消</button><button class="solid" data-x="s">保存</button></div>
+    ${id ? `<div class="acts"><button class="danger" data-x="d">删除这个模板</button></div>` : ''}`,
+    (root, close) => {
+      const ted = root.querySelector('#ted');
+      root.querySelector('#ico').onclick = (e) => {
+        const b = e.target.closest('[data-ico]');
+        if (!b) return;
+        clone.icon = b.dataset.ico;
+        root.querySelectorAll('#ico button').forEach((x) => x.classList.toggle('on', x === b));
+      };
+      ted.oninput = (e) => {
+        const row = e.target.closest('[data-k]');
+        if (!row) return;
+        const f = e.target.dataset.f;
+        clone.items[+row.dataset.k][f === 'n' ? 0 : 1] = e.target.value;
+      };
+      ted.onclick = (e) => {
+        const rm = e.target.closest('[data-rm]');
+        if (!rm) return;
+        clone.items.splice(+rm.dataset.rm, 1);
+        ted.innerHTML = rows();
+      };
+      root.querySelector('#addRow').onclick = () => {
+        clone.items.push(['', '1', 'both', CATS[0], 0]);
+        ted.innerHTML = rows();
+        ted.lastElementChild.querySelector('[data-f="n"]').focus();
+      };
+      root.querySelector('[data-x="c"]').onclick = () => back && back();
+      root.querySelector('[data-x="s"]').onclick = () => {
+        clone.name = (root.querySelector('#en').value || '').trim() || '未命名';
+        clone.items = clone.items.filter((it) => (it[0] || '').trim());
+        clone.items.forEach((it) => { it[0] = it[0].trim(); it[1] = it[1] || '1'; });
+        if (id) {
+          const k = templates.findIndex((x) => x.id === id);
+          if (k >= 0) templates[k] = clone;
+          refreshScene(id);
+        } else {
+          templates.push(clone);
+          applyScene(clone.id, true);
+        }
+        saveTpl(); close();
+        toast(id ? '模板已更新' : `已新建「${clone.name}」`);
+        if (back) back();
+      };
+      const del = root.querySelector('[data-x="d"]');
+      if (del) del.onclick = () => {
+        if (!confirm(`删掉「${clone.name}」这个模板？已加进清单的东西会一起删掉。`)) return;
+        templates = templates.filter((x) => x.id !== id);
+        dropScene(id, true);
+        saveTpl(); close(); toast('模板已删除');
+        if (back) back();
+      };
+      setTimeout(() => root.querySelector('#en').focus(), 60);
+    });
+}
+
+/* ---------- 同步 ----------
+   纯文本行格式，比 Base64 短很多，微信里也读得懂：
+   PK4|清单名
+   名字|数量|归属|分类|重要|已拿 */
+function packText() {
+  const rows = state.items.map((i) =>
+    [String(i.name).replace(/\|/g, '/'), i.qty || '1', i.owner || 'both', i.cat || '其它', i.star ? 1 : 0, i.done ? 1 : 0].join('|'));
+  return `PK4|${String(state.title || '').replace(/\|/g, '/')}\n` + rows.join('\n');
+}
+function unpackText(txt) {
+  const lines = txt.trim().split(/\r?\n/).filter((l) => l.trim());
+  if (!lines[0] || lines[0].indexOf('PK4') !== 0) throw new Error('bad');
+  const title = (lines[0].split('|')[1] || '').trim();
+  const items = lines.slice(1).map((l) => {
+    const p = l.split('|');
+    if (p.length < 4 || !p[0].trim()) throw new Error('bad');
+    return {
+      id: uid(), name: p[0].trim(), qty: p[1] || '1', owner: p[2] || 'both',
+      cat: p[3] || '其它', star: p[4] === '1', done: p[5] === '1', tag: null,
+    };
+  });
+  if (!items.length) throw new Error('bad');
+  return { title, items };
+}
+
+/* ---------- 设置 ---------- */
+$('#bSet').onclick = () => {
+  openDialog(`<h3>设置</h3>
+    <input class="inp" id="sn" value="${esc(state.title)}" placeholder="清单名字">
+    <div class="acts"><button data-x="c">关掉</button><button class="solid" data-x="s">存名字</button></div>
+    <div class="acts"><button data-x="share">发给 TA</button><button data-x="text">复制成文字</button></div>
+    <div class="acts"><button data-x="clear">清掉所有勾</button><button class="danger" data-x="reset">重置清单</button></div>`,
+    (root, close) => {
+      root.querySelector('[data-x="c"]').onclick = close;
+      root.querySelector('[data-x="s"]').onclick = () => {
+        state.title = root.querySelector('#sn').value.trim() || '出行清单';
+        save(); render(); close(); toast('改了');
+      };
+      root.querySelector('[data-x="clear"]').onclick = () => {
+        state.items.forEach((i) => { i.done = false; });
+        save(); render(); close(); toast('全清了');
+      };
+      root.querySelector('[data-x="reset"]').onclick = () => {
+        if (!confirm('回到最开始的 61 项？你加的东西会没。')) return;
+        state.items = buildBase(); state.scenes = []; save(); render(); close(); toast('已重置');
+      };
+      root.querySelector('[data-x="text"]').onclick = () => {
+        const txt = state.items.map((i) => `${i.done ? '☑' : '☐'} ${i.name}${i.qty && i.qty !== '1' ? ' ×' + i.qty : ''}${i.star ? ' ★' : ''}`).join('\n');
+        copy(txt, '文字清单已复制');
+      };
+      root.querySelector('[data-x="share"]').onclick = () => { close(); openShare(); };
+    });
+};
+
+function openShare() {
+  const code = packText();
+  openDialog(`<h3>发给 TA</h3><p>复制发微信，对方在「接收」里粘一下，两边就是同一份</p>
+    <div class="seg"><button data-s="o" class="on">我的码</button><button data-s="i">接收</button></div>
+    <div id="po"><textarea class="inp" id="code" readonly>${esc(code)}</textarea>
+      <div class="acts"><button data-x="c">关掉</button><button class="solid" data-x="cp">复制</button></div></div>
+    <div id="pi" style="display:none"><textarea class="inp" id="inc" placeholder="粘贴 TA 发来的那段"></textarea>
+      <div class="acts"><button data-x="c2">取消</button><button class="solid" data-x="ap">载入</button></div></div>`,
+    (root, close) => {
+      const po = root.querySelector('#po'), pi = root.querySelector('#pi');
+      root.querySelector('.seg').onclick = (e) => {
+        const b = e.target.closest('[data-s]');
+        if (!b) return;
+        root.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('on', x === b));
+        const out = b.dataset.s === 'o';
+        po.style.display = out ? '' : 'none';
+        pi.style.display = out ? 'none' : '';
+      };
+      root.querySelector('[data-x="c"]').onclick = close;
+      root.querySelector('[data-x="c2"]').onclick = close;
+      root.querySelector('[data-x="cp"]').onclick = () => copy(code, '已复制');
+      root.querySelector('[data-x="ap"]').onclick = () => {
+        try {
+          const d = unpackText(root.querySelector('#inc').value);
+          state.items = d.items;
+          state.scenes = [];
+          if (d.title) state.title = d.title;
+          save(); render(); close(); toast(`载入了 ${d.items.length} 项`);
+        } catch (e) { toast('这段不对，检查有没有漏行'); }
+      };
+    });
+}
+
+function copy(text, msg) {
+  const done = () => toast(msg);
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallback());
+  } else fallback();
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败，手动选一下吧'); }
+    document.body.removeChild(ta);
+  }
+}
+
+/* ---------- 弹窗 ---------- */
+function openDialog(html, wire) {
+  const dlg = $('#dlg');
+  $('#dlgBody').innerHTML = html;
+  if (!dlg.open) dlg.showModal();
+  wire($('#dlgBody'), () => dlg.close());
+  dlg.onclick = (e) => { if (e.target === dlg) dlg.close(); };
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 1800);
+}
+
+/* ---------- 启动 ---------- */
+load();
+render();
+
+/* 部署到 https 后自动注册 service worker，断网也能打开 */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
